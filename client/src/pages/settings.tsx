@@ -183,10 +183,10 @@ export default function Settings() {
             <div className="space-y-4">
               <div className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
-                  <FormLabel className="text-base">Export Data</FormLabel>
-                  <FormDescription>
+                  <div className="text-base font-medium">Export Data</div>
+                  <p className="text-sm text-gray-500">
                     Download all your habit tracking data as a CSV file
-                  </FormDescription>
+                  </p>
                 </div>
                 <Button variant="outline">
                   Export
@@ -195,10 +195,10 @@ export default function Settings() {
               
               <div className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
-                  <FormLabel className="text-base text-red-600">Reset Data</FormLabel>
-                  <FormDescription>
+                  <div className="text-base font-medium text-red-600">Reset Data</div>
+                  <p className="text-sm text-gray-500">
                     Delete all your habits and tracking history. This cannot be undone.
-                  </FormDescription>
+                  </p>
                 </div>
                 <AlertDialog open={isReset} onOpenChange={setIsReset}>
                   <AlertDialogTrigger asChild>
