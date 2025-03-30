@@ -1,3 +1,6 @@
+![image](https://github.com/user-attachments/assets/a6418d22-e26b-4c28-bb32-ca09d0720d83)
+
+
 # Habit Tracker Application
 
 A comprehensive habit tracking application with visualization features to help users monitor and maintain their daily routines.
