@@ -58,9 +58,14 @@ export const habitCompletions = pgTable("habit_completions", {
   userId: integer("user_id").references(() => users.id),
 });
 
-export const insertHabitCompletionSchema = createInsertSchema(habitCompletions).omit({
-  id: true,
-});
+export const insertHabitCompletionSchema = createInsertSchema(habitCompletions)
+  .omit({
+    id: true,
+  })
+  .extend({
+    // Allow string dates to be passed from the client
+    date: z.string().or(z.date()),
+  });
 
 export type InsertHabitCompletion = z.infer<typeof insertHabitCompletionSchema>;
 export type HabitCompletion = typeof habitCompletions.$inferSelect;
