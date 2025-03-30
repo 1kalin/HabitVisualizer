@@ -34,15 +34,10 @@ export default function HabitCard({ habit, completions, completionRate, isComple
     },
     onSuccess: () => {
       setCompleted(!completed);
-      // Invalidate all relevant query keys to update dashboards and statistics
-      queryClient.invalidateQueries({ queryKey: ['/api/habits'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
-      // Invalidate all statistics-related queries
-      queryClient.invalidateQueries({ queryKey: ['/api/stats/weekly'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats/habits'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats/heatmap'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats/trends'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats/comparison'] });
+      
+      // More aggressive invalidation strategy to ensure all UI elements update
+      // Invalidate all queries to force a complete refresh
+      queryClient.invalidateQueries();
     }
   });
 
