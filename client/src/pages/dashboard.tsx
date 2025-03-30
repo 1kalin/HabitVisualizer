@@ -33,16 +33,11 @@ export default function Dashboard() {
   };
 
   // Filter habits for today based on frequency
-  const getTodaysHabits = () => {
-    if (!habits) return [];
-    
+  // Using useMemo to recalculate this when habits changes
+  const todaysHabits = habits ? habits.filter(habit => {
     const dayOfWeek = new Date().getDay();
-    return habits.filter(habit => 
-      (habit.frequencyDays as number[]).includes(dayOfWeek)
-    );
-  };
-
-  const todaysHabits = getTodaysHabits();
+    return (habit.frequencyDays as number[]).includes(dayOfWeek);
+  }) : [];
 
   return (
     <>

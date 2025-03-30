@@ -31,8 +31,11 @@ export default function Habits() {
     );
   };
 
-  // Filter habits based on search term and active tab
+  // Filter habits based on search term and active tab - this will be recalculated whenever habits, searchTerm, or activeTab change
   const filteredHabits = habits?.filter(habit => {
+    // Get current day for "today" filter - always fetch latest to ensure it's current
+    const currentDayOfWeek = new Date().getDay();
+    
     // Search filter
     const matchesSearch = habit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (habit.description && habit.description.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -40,9 +43,10 @@ export default function Habits() {
     // Tab filter
     if (activeTab === "all") return matchesSearch;
     if (activeTab === "today") {
-      return matchesSearch && (habit.frequencyDays as number[]).includes(dayOfWeek);
+      return matchesSearch && (habit.frequencyDays as number[]).includes(currentDayOfWeek);
     }
     if (activeTab === "completed") {
+      // Always check completion status using the latest habit completion data
       return matchesSearch && isHabitCompletedToday(habit);
     }
     return matchesSearch;
