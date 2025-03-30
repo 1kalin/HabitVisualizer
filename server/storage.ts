@@ -80,35 +80,35 @@ export class MemStorage implements IStorage {
         name: "Morning Workout",
         description: "30 minutes of exercise",
         color: "#4F46E5",
-        frequencyDays: [1, 2, 3, 4, 5],
+        frequencyDays: [1, 2, 3, 4, 5] as DayOfWeek[],
         reminderTime: "07:00",
       },
       {
         name: "Read Book",
         description: "20 pages daily",
         color: "#10B981",
-        frequencyDays: [0, 1, 2, 3, 4, 5, 6],
+        frequencyDays: [0, 1, 2, 3, 4, 5, 6] as DayOfWeek[],
         reminderTime: "21:00",
       },
       {
         name: "Meditation",
         description: "10 minutes of mindfulness",
         color: "#F59E0B",
-        frequencyDays: [0, 1, 2, 3, 4, 5, 6],
+        frequencyDays: [0, 1, 2, 3, 4, 5, 6] as DayOfWeek[],
         reminderTime: "08:00",
       },
       {
         name: "Drink Water",
         description: "8 glasses daily",
         color: "#4F46E5",
-        frequencyDays: [0, 1, 2, 3, 4, 5, 6],
+        frequencyDays: [0, 1, 2, 3, 4, 5, 6] as DayOfWeek[],
         reminderTime: "",
       },
       {
         name: "Journal",
         description: "Write daily thoughts",
         color: "#DC2626",
-        frequencyDays: [1, 2, 3, 4, 5],
+        frequencyDays: [1, 2, 3, 4, 5] as DayOfWeek[],
         reminderTime: "20:00",
       }
     ];
@@ -132,7 +132,7 @@ export class MemStorage implements IStorage {
         if (!habit) continue;
         
         const dayOfWeek = date.getDay();
-        const isHabitDayOfWeek = (habit.frequencyDays as number[]).includes(dayOfWeek);
+        const isHabitDayOfWeek = (habit.frequencyDays as DayOfWeek[]).includes(dayOfWeek as DayOfWeek);
         
         if (isHabitDayOfWeek) {
           // Different completion patterns for different habits
@@ -192,7 +192,7 @@ export class MemStorage implements IStorage {
       name: habitData.name,
       description: habitData.description ?? null,
       color: habitData.color ?? null,
-      frequencyDays: habitData.frequencyDays, // Use as is, since it's already the correct type
+      frequencyDays: habitData.frequencyDays as DayOfWeek[], // Explicitly cast to correct type
       reminderTime: habitData.reminderTime ?? null,
       createdAt: now,
       userId: habitData.userId ?? null,
@@ -212,7 +212,7 @@ export class MemStorage implements IStorage {
       name: habitData.name ?? existingHabit.name,
       description: habitData.description ?? existingHabit.description,
       color: habitData.color ?? existingHabit.color,
-      frequencyDays: habitData.frequencyDays ?? existingHabit.frequencyDays,
+      frequencyDays: (habitData.frequencyDays ?? existingHabit.frequencyDays) as DayOfWeek[],
       reminderTime: habitData.reminderTime ?? existingHabit.reminderTime,
       createdAt: existingHabit.createdAt,
       userId: habitData.userId ?? existingHabit.userId,
@@ -290,7 +290,7 @@ export class MemStorage implements IStorage {
     
     // Count habits for today based on frequency
     const habitsForToday = habits.filter(habit => 
-      (habit.frequencyDays as number[]).includes(dayOfWeek)
+      (habit.frequencyDays as DayOfWeek[]).includes(dayOfWeek as DayOfWeek)
     ).length;
     
     // Count completed habits for today
@@ -328,7 +328,7 @@ export class MemStorage implements IStorage {
       
       // Get habits scheduled for this day of week
       const habitsForDay = Array.from(this.habits.values()).filter(
-        habit => (habit.frequencyDays as number[]).includes(dayOfWeek)
+        habit => (habit.frequencyDays as DayOfWeek[]).includes(dayOfWeek as DayOfWeek)
       );
       
       // Count completions for this date
@@ -392,7 +392,7 @@ export class MemStorage implements IStorage {
       
       // Check if habit is scheduled for this day
       const dayOfWeek = date.getDay();
-      const isScheduled = (habit.frequencyDays as number[]).includes(dayOfWeek);
+      const isScheduled = (habit.frequencyDays as DayOfWeek[]).includes(dayOfWeek as DayOfWeek);
       
       if (isScheduled) {
         scheduledDays++;
@@ -433,7 +433,7 @@ export class MemStorage implements IStorage {
       
       // Get habits scheduled for this day
       const habitsForDay = Array.from(this.habits.values()).filter(
-        habit => (habit.frequencyDays as number[]).includes(dayOfWeek)
+        habit => (habit.frequencyDays as DayOfWeek[]).includes(dayOfWeek as DayOfWeek)
       );
       
       totalScheduled += habitsForDay.length;
