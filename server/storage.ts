@@ -7,7 +7,8 @@ import {
   HabitWithCompletions,
   WeeklyCompletionData,
   HabitPerformance,
-  DaysOfWeek
+  DaysOfWeek,
+  DayOfWeek
 } from "@shared/schema";
 
 // Helper functions
@@ -191,7 +192,7 @@ export class MemStorage implements IStorage {
       name: habitData.name,
       description: habitData.description ?? null,
       color: habitData.color ?? null,
-      frequencyDays: habitData.frequencyDays as unknown as number[], // Type cast to match expected type
+      frequencyDays: habitData.frequencyDays, // Use as is, since it's already the correct type
       reminderTime: habitData.reminderTime ?? null,
       createdAt: now,
       userId: habitData.userId ?? null,
@@ -211,7 +212,7 @@ export class MemStorage implements IStorage {
       name: habitData.name ?? existingHabit.name,
       description: habitData.description ?? existingHabit.description,
       color: habitData.color ?? existingHabit.color,
-      frequencyDays: habitData.frequencyDays as unknown as number[] ?? existingHabit.frequencyDays,
+      frequencyDays: habitData.frequencyDays ?? existingHabit.frequencyDays,
       reminderTime: habitData.reminderTime ?? existingHabit.reminderTime,
       createdAt: existingHabit.createdAt,
       userId: habitData.userId ?? existingHabit.userId,
