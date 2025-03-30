@@ -183,10 +183,18 @@ export class MemStorage implements IStorage {
   
   async createHabit(habitData: InsertHabit): Promise<Habit> {
     const id = this.habitCounter++;
+    const now = new Date();
+    
+    // Create a properly typed Habit object with defaults for null values
     const habit: Habit = {
-      ...habitData,
       id,
-      createdAt: new Date(),
+      name: habitData.name,
+      description: habitData.description ?? null,
+      color: habitData.color ?? null,
+      frequencyDays: habitData.frequencyDays as unknown as number[], // Type cast to match expected type
+      reminderTime: habitData.reminderTime ?? null,
+      createdAt: now,
+      userId: habitData.userId ?? null,
     };
     
     this.habits.set(id, habit);
@@ -197,9 +205,16 @@ export class MemStorage implements IStorage {
     const existingHabit = this.habits.get(id);
     if (!existingHabit) return undefined;
     
+    // Create a properly typed updated Habit object
     const updatedHabit: Habit = {
-      ...existingHabit,
-      ...habitData,
+      id,
+      name: habitData.name ?? existingHabit.name,
+      description: habitData.description ?? existingHabit.description,
+      color: habitData.color ?? existingHabit.color,
+      frequencyDays: habitData.frequencyDays as unknown as number[] ?? existingHabit.frequencyDays,
+      reminderTime: habitData.reminderTime ?? existingHabit.reminderTime,
+      createdAt: existingHabit.createdAt,
+      userId: habitData.userId ?? existingHabit.userId,
     };
     
     this.habits.set(id, updatedHabit);
@@ -242,9 +257,16 @@ export class MemStorage implements IStorage {
   
   async createCompletion(completionData: InsertHabitCompletion): Promise<HabitCompletion> {
     const id = this.completionCounter++;
+    
+    // Create a properly typed HabitCompletion object
     const completion: HabitCompletion = {
-      ...completionData,
       id,
+      habitId: completionData.habitId,
+      date: typeof completionData.date === 'string' 
+        ? new Date(completionData.date) 
+        : completionData.date as Date,
+      completed: completionData.completed ?? true,
+      userId: completionData.userId ?? null
     };
     
     this.completions.set(id, completion);
@@ -271,9 +293,14 @@ export class MemStorage implements IStorage {
     ).length;
     
     // Count completed habits for today
-    const completedToday = completions.filter(
-      c => formatDateToYYYYMMDD(new Date(c.date)) === today && c.completed
-    ).length;
+    const completedToday = completions.filter(c => {
+      // Ensure we properly handle both string and Date objects
+      const completionDate = typeof c.date === 'string' 
+        ? formatDateToYYYYMMDD(new Date(c.date))
+        : formatDateToYYYYMMDD(c.date as Date);
+      
+      return completionDate === today && c.completed;
+    }).length;
     
     // Calculate weekly streak
     const weeklyStreak = this.calculateOverallCompletionRate();
@@ -304,9 +331,14 @@ export class MemStorage implements IStorage {
       );
       
       // Count completions for this date
-      const completionsForDate = Array.from(this.completions.values()).filter(
-        c => formatDateToYYYYMMDD(new Date(c.date)) === dateStr && c.completed
-      );
+      const completionsForDate = Array.from(this.completions.values()).filter(c => {
+        // Ensure we properly handle both string and Date objects
+        const completionDate = typeof c.date === 'string' 
+          ? formatDateToYYYYMMDD(new Date(c.date))
+          : formatDateToYYYYMMDD(c.date as Date);
+        
+        return completionDate === dateStr && c.completed;
+      });
       
       // Calculate completion rate
       const completionRate = habitsForDay.length === 0 
@@ -365,11 +397,14 @@ export class MemStorage implements IStorage {
         scheduledDays++;
         
         // Check if it was completed
-        const wasCompleted = Array.from(this.completions.values()).some(
-          c => c.habitId === habitId && 
-               formatDateToYYYYMMDD(new Date(c.date)) === dateStr && 
-               c.completed
-        );
+        const wasCompleted = Array.from(this.completions.values()).some(c => {
+          // Ensure we properly handle both string and Date objects
+          const completionDate = typeof c.date === 'string' 
+            ? formatDateToYYYYMMDD(new Date(c.date))
+            : formatDateToYYYYMMDD(c.date as Date);
+          
+          return c.habitId === habitId && completionDate === dateStr && c.completed;
+        });
         
         if (wasCompleted) {
           completedDays++;
@@ -404,11 +439,14 @@ export class MemStorage implements IStorage {
       
       // Count completions for this date
       for (const habit of habitsForDay) {
-        const completed = Array.from(this.completions.values()).some(
-          c => c.habitId === habit.id && 
-               formatDateToYYYYMMDD(new Date(c.date)) === dateStr && 
-               c.completed
-        );
+        const completed = Array.from(this.completions.values()).some(c => {
+          // Ensure we properly handle both string and Date objects
+          const completionDate = typeof c.date === 'string' 
+            ? formatDateToYYYYMMDD(new Date(c.date))
+            : formatDateToYYYYMMDD(c.date as Date);
+          
+          return c.habitId === habit.id && completionDate === dateStr && c.completed;
+        });
         
         if (completed) {
           totalCompleted++;
