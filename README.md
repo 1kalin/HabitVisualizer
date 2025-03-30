@@ -1,5 +1,6 @@
 ![image](https://github.com/user-attachments/assets/a6418d22-e26b-4c28-bb32-ca09d0720d83)
 
+![image](https://github.com/user-attachments/assets/43f81603-20e6-4991-81ca-4baced6e9fa1)
 
 # Habit Tracker Application
 
