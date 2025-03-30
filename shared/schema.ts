@@ -94,3 +94,23 @@ export type HabitPerformance = {
   habitName: string;
   completionRate: number;
 };
+
+// Enhanced visualization types
+export type MonthlyHeatmapData = {
+  date: string;
+  value: number;
+  habits: number;
+  completed: number;
+};
+
+export type HabitTrendData = {
+  week: string;
+  completionRate: number;
+};
+
+export type HabitComparisonData = {
+  name: string;
+  currentWeek: number;
+  previousWeek: number;
+  change: number;
+};

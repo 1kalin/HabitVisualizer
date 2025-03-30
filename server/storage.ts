@@ -8,7 +8,10 @@ import {
   WeeklyCompletionData,
   HabitPerformance,
   DaysOfWeek,
-  DayOfWeek
+  DayOfWeek,
+  MonthlyHeatmapData,
+  HabitTrendData,
+  HabitComparisonData
 } from "@shared/schema";
 
 // Helper functions
@@ -52,6 +55,11 @@ export interface IStorage {
   getHabitStatistics(): Promise<HabitStatistics>;
   getWeeklyCompletionData(): Promise<WeeklyCompletionData[]>;
   getHabitPerformance(): Promise<HabitPerformance[]>;
+  
+  // Enhanced visualizations
+  getMonthlyHeatmapData(year: number, month: number): Promise<MonthlyHeatmapData[]>;
+  getHabitTrends(habitId: number): Promise<HabitTrendData[]>;
+  getHabitComparison(): Promise<HabitComparisonData[]>;
   
   // Data management
   resetAllData(): Promise<void>;
@@ -363,6 +371,198 @@ export class MemStorage implements IStorage {
         completionRate: this.calculateCompletionRate(habit.id),
       };
     });
+  }
+  
+  async getMonthlyHeatmapData(year: number, month: number): Promise<MonthlyHeatmapData[]> {
+    // Get all days in the specified month
+    const startDate = new Date(year, month - 1, 1); // Month is 0-based in Date constructor
+    const endDate = new Date(year, month, 0); // Last day of month
+    const daysInMonth = endDate.getDate();
+    
+    const result: MonthlyHeatmapData[] = [];
+    
+    // For each day in the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const currentDate = new Date(year, month - 1, day);
+      const dateStr = formatDateToYYYYMMDD(currentDate);
+      const dayOfWeek = currentDate.getDay();
+      
+      // Get habits scheduled for this day
+      const habitsForDay = Array.from(this.habits.values()).filter(
+        habit => (habit.frequencyDays as DayOfWeek[]).includes(dayOfWeek as DayOfWeek)
+      );
+      
+      // Get completions for this day
+      const completionsForDay = Array.from(this.completions.values()).filter(c => {
+        const completionDate = typeof c.date === 'string' 
+          ? formatDateToYYYYMMDD(new Date(c.date)) 
+          : formatDateToYYYYMMDD(c.date as Date);
+        
+        return completionDate === dateStr && c.completed;
+      });
+      
+      // Calculate completion percentage
+      const habitCount = habitsForDay.length;
+      const completedCount = completionsForDay.length;
+      const completionRate = habitCount === 0 ? 0 : Math.round((completedCount / habitCount) * 100);
+      
+      result.push({
+        date: dateStr,
+        value: completionRate,
+        habits: habitCount,
+        completed: completedCount
+      });
+    }
+    
+    return result;
+  }
+  
+  async getHabitTrends(habitId: number): Promise<HabitTrendData[]> {
+    const habit = this.habits.get(habitId);
+    if (!habit) return [];
+    
+    // Get weekly data for the past 8 weeks
+    const today = new Date();
+    const result: HabitTrendData[] = [];
+    
+    for (let weekOffset = 7; weekOffset >= 0; weekOffset--) {
+      // Calculate week range
+      const weekEnd = new Date(today);
+      weekEnd.setDate(today.getDate() - (weekOffset * 7));
+      const weekStart = new Date(weekEnd);
+      weekStart.setDate(weekEnd.getDate() - 6);
+      
+      // Format week label (e.g., "Mar 1-7")
+      const weekLabel = `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}-${
+        weekEnd.toLocaleDateString('en-US', { day: 'numeric' })
+      }`;
+      
+      let scheduledDays = 0;
+      let completedDays = 0;
+      
+      // Check each day in this week
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + i);
+        const dateStr = formatDateToYYYYMMDD(date);
+        const dayOfWeek = date.getDay();
+        
+        // Check if habit is scheduled for this day
+        const isScheduled = (habit.frequencyDays as DayOfWeek[]).includes(dayOfWeek as DayOfWeek);
+        
+        if (isScheduled) {
+          scheduledDays++;
+          
+          // Check if it was completed
+          const wasCompleted = Array.from(this.completions.values()).some(c => {
+            const completionDate = typeof c.date === 'string' 
+              ? formatDateToYYYYMMDD(new Date(c.date)) 
+              : formatDateToYYYYMMDD(c.date as Date);
+            
+            return c.habitId === habitId && completionDate === dateStr && c.completed;
+          });
+          
+          if (wasCompleted) {
+            completedDays++;
+          }
+        }
+      }
+      
+      const completionRate = scheduledDays === 0 ? 0 : Math.round((completedDays / scheduledDays) * 100);
+      
+      result.push({
+        week: weekLabel,
+        completionRate
+      });
+    }
+    
+    return result;
+  }
+  
+  async getHabitComparison(): Promise<HabitComparisonData[]> {
+    const habits = Array.from(this.habits.values());
+    const result: HabitComparisonData[] = [];
+    
+    for (const habit of habits) {
+      const habitId = habit.id;
+      
+      // Calculate current week completion rate
+      const today = new Date();
+      let currentWeekScheduled = 0;
+      let currentWeekCompleted = 0;
+      
+      // Calculate previous week completion rate
+      const lastWeekDate = new Date(today);
+      lastWeekDate.setDate(today.getDate() - 7);
+      let prevWeekScheduled = 0;
+      let prevWeekCompleted = 0;
+      
+      // For each day in current week
+      for (let i = 0; i < 7; i++) {
+        const currentDate = new Date(today);
+        currentDate.setDate(today.getDate() - i);
+        const currentDateStr = formatDateToYYYYMMDD(currentDate);
+        const currentDayOfWeek = currentDate.getDay();
+        
+        // Check if scheduled for current week
+        const isCurrentScheduled = (habit.frequencyDays as DayOfWeek[]).includes(currentDayOfWeek as DayOfWeek);
+        if (isCurrentScheduled) {
+          currentWeekScheduled++;
+          
+          // Check if completed
+          const wasCurrentCompleted = Array.from(this.completions.values()).some(c => {
+            const completionDate = typeof c.date === 'string' 
+              ? formatDateToYYYYMMDD(new Date(c.date)) 
+              : formatDateToYYYYMMDD(c.date as Date);
+            
+            return c.habitId === habitId && completionDate === currentDateStr && c.completed;
+          });
+          
+          if (wasCurrentCompleted) {
+            currentWeekCompleted++;
+          }
+        }
+        
+        // Previous week date (current day - 7)
+        const prevDate = new Date(currentDate);
+        prevDate.setDate(currentDate.getDate() - 7);
+        const prevDateStr = formatDateToYYYYMMDD(prevDate);
+        const prevDayOfWeek = prevDate.getDay();
+        
+        // Check if scheduled for previous week
+        const isPrevScheduled = (habit.frequencyDays as DayOfWeek[]).includes(prevDayOfWeek as DayOfWeek);
+        if (isPrevScheduled) {
+          prevWeekScheduled++;
+          
+          // Check if completed
+          const wasPrevCompleted = Array.from(this.completions.values()).some(c => {
+            const completionDate = typeof c.date === 'string' 
+              ? formatDateToYYYYMMDD(new Date(c.date)) 
+              : formatDateToYYYYMMDD(c.date as Date);
+            
+            return c.habitId === habitId && completionDate === prevDateStr && c.completed;
+          });
+          
+          if (wasPrevCompleted) {
+            prevWeekCompleted++;
+          }
+        }
+      }
+      
+      const currentWeekRate = currentWeekScheduled === 0 ? 0 : Math.round((currentWeekCompleted / currentWeekScheduled) * 100);
+      const prevWeekRate = prevWeekScheduled === 0 ? 0 : Math.round((prevWeekCompleted / prevWeekScheduled) * 100);
+      const change = currentWeekRate - prevWeekRate;
+      
+      result.push({
+        name: habit.name,
+        currentWeek: currentWeekRate,
+        previousWeek: prevWeekRate,
+        change
+      });
+    }
+    
+    // Sort by change (most improved first)
+    return result.sort((a, b) => b.change - a.change);
   }
   
   async resetAllData(): Promise<void> {

@@ -192,6 +192,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced visualization endpoints
+  
+  // Get monthly heatmap data
+  app.get("/api/stats/heatmap", async (req, res) => {
+    try {
+      const { year, month } = req.query;
+      
+      // Use current year and month if not provided
+      const currentDate = new Date();
+      const yearValue = year ? parseInt(year as string) : currentDate.getFullYear();
+      const monthValue = month ? parseInt(month as string) : currentDate.getMonth() + 1;
+      
+      if (isNaN(yearValue) || isNaN(monthValue)) {
+        return res.status(400).json({ message: "Invalid year or month parameters" });
+      }
+      
+      const heatmapData = await storage.getMonthlyHeatmapData(yearValue, monthValue);
+      res.json(heatmapData);
+    } catch (error) {
+      console.error("Error fetching heatmap data:", error);
+      res.status(500).json({ message: "Failed to fetch heatmap data" });
+    }
+  });
+  
+  // Get habit trends
+  app.get("/api/stats/trends/:habitId", async (req, res) => {
+    try {
+      const habitId = parseInt(req.params.habitId);
+      if (isNaN(habitId)) {
+        return res.status(400).json({ message: "Invalid habit ID" });
+      }
+      
+      // Check if habit exists
+      const habit = await storage.getHabit(habitId);
+      if (!habit) {
+        return res.status(404).json({ message: "Habit not found" });
+      }
+      
+      const trendsData = await storage.getHabitTrends(habitId);
+      res.json(trendsData);
+    } catch (error) {
+      console.error("Error fetching habit trends:", error);
+      res.status(500).json({ message: "Failed to fetch habit trends" });
+    }
+  });
+  
+  // Get habit comparison data
+  app.get("/api/stats/comparison", async (req, res) => {
+    try {
+      const comparisonData = await storage.getHabitComparison();
+      res.json(comparisonData);
+    } catch (error) {
+      console.error("Error fetching habit comparison:", error);
+      res.status(500).json({ message: "Failed to fetch habit comparison" });
+    }
+  });
+
   // Reset all habits and completions (for settings page)
   app.delete("/api/habits/reset", async (req, res) => {
     try {
