@@ -60,15 +60,27 @@ export default function CalendarView() {
     const dateCompletions = getCompletionsForDate(date);
     const applicableHabits = getHabitsForDayOfWeek(date);
     
+    // Count any habit that has a completion marked as completed for this date
     const completedHabits = dateCompletions.filter(c => c.completed).length;
+    
+    // Total habits is the number of habits scheduled for that day
     const totalHabits = applicableHabits.length;
+    
+    // A day is considered complete if all scheduled habits are completed
+    // or if there are completions but no scheduled habits (completed extra habits)
+    const isCompleted = (totalHabits > 0 && completedHabits >= totalHabits) || 
+                        (totalHabits === 0 && completedHabits > 0);
+                        
+    // A day is considered missed if some habits are incomplete and the date is in the past
+    const isMissed = totalHabits > 0 && completedHabits < totalHabits && 
+                     date < new Date(new Date().setHours(0,0,0,0));
     
     return {
       date,
       completedHabits,
       totalHabits,
-      isCompleted: totalHabits > 0 && completedHabits === totalHabits,
-      isMissed: totalHabits > 0 && completedHabits < totalHabits && date < new Date(new Date().setHours(0,0,0,0)),
+      isCompleted,
+      isMissed,
     };
   };
 
@@ -83,6 +95,8 @@ export default function CalendarView() {
     newMonth.setMonth(newMonth.getMonth() + 1);
     setMonth(newMonth);
   };
+
+  const selectedStatus = getDayStatus(date);
 
   return (
     <Card>
@@ -123,30 +137,44 @@ export default function CalendarView() {
           month={month}
           onMonthChange={setMonth}
           className="rounded-md border"
-          components={{
-            Day: ({ day, ...props }) => {
-              const dayStatus = getDayStatus(day);
-              return (
-                <div
-                  {...props}
-                  className={cn(
-                    props.className,
-                    "relative",
-                    dayStatus.isCompleted && "bg-green-600 text-white hover:bg-green-700",
-                    dayStatus.isMissed && "bg-red-600 text-white hover:bg-red-700"
-                  )}
-                >
-                  {props.children}
-                  {dayStatus.totalHabits > 0 && (
-                    <div className="absolute bottom-1 left-0 right-0 text-[8px] text-center">
-                      {dayStatus.completedHabits}/{dayStatus.totalHabits}
-                    </div>
-                  )}
-                </div>
-              );
-            },
+          modifiers={{
+            completed: (day) => getDayStatus(day).isCompleted,
+            missed: (day) => getDayStatus(day).isMissed,
+            hasHabits: (day) => 
+              getDayStatus(day).completedHabits > 0 || 
+              getDayStatus(day).totalHabits > 0
+          }}
+          modifiersClassNames={{
+            completed: "bg-green-600 text-white hover:bg-green-700",
+            missed: "bg-red-600 text-white hover:bg-red-700"
           }}
         />
+        
+        {/* Calendar day details */}
+        <div className="mt-2 pt-2 border-t">
+          <div className="text-sm font-medium mb-1">
+            Selected Day: {date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+          </div>
+          
+          {(selectedStatus.completedHabits > 0 || selectedStatus.totalHabits > 0) ? (
+            <div className="text-sm">
+              <span className="text-gray-600">Completed habits:</span> 
+              <span className="font-medium ml-1">{selectedStatus.completedHabits} of {selectedStatus.totalHabits || "unscheduled"}</span>
+              {selectedStatus.isCompleted && (
+                <span className="text-green-600 text-xs ml-2">✓ All completed</span>
+              )}
+              {selectedStatus.isMissed && (
+                <span className="text-red-600 text-xs ml-2">✗ Some missed</span>
+              )}
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500">No habits tracked for this day</div>
+          )}
+          
+          <div className="text-xs text-gray-500 mt-1">
+            Click on any day to see details
+          </div>
+        </div>
         
         <div className="mt-6 flex items-center justify-center space-x-4">
           <div className="flex items-center">
