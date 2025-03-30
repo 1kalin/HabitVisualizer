@@ -43,7 +43,8 @@ export default function Habits() {
     // Tab filter
     if (activeTab === "all") return matchesSearch;
     if (activeTab === "today") {
-      return matchesSearch && (habit.frequencyDays as number[]).includes(currentDayOfWeek);
+      // Include habit if it's scheduled for today OR completed today
+      return matchesSearch && ((habit.frequencyDays as number[]).includes(currentDayOfWeek) || isHabitCompletedToday(habit));
     }
     if (activeTab === "completed") {
       // Always check completion status using the latest habit completion data

@@ -32,11 +32,11 @@ export default function Dashboard() {
     );
   };
 
-  // Filter habits for today based on frequency
-  // Using useMemo to recalculate this when habits changes
+  // Filter habits for today based on frequency AND show any completed today
   const todaysHabits = habits ? habits.filter(habit => {
     const dayOfWeek = new Date().getDay();
-    return (habit.frequencyDays as number[]).includes(dayOfWeek);
+    // Include the habit if it's scheduled for today OR it has been completed today
+    return (habit.frequencyDays as number[]).includes(dayOfWeek) || isHabitCompletedToday(habit);
   }) : [];
 
   return (
