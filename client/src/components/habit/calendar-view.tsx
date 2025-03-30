@@ -26,7 +26,7 @@ export default function CalendarView() {
   });
 
   const { data: completions, isLoading: isCompletionsLoading } = useQuery<HabitCompletion[]>({
-    queryKey: ['/api/habits/completions'],
+    queryKey: ['/api/completions'],
   });
 
   if (isLoading || isCompletionsLoading || !habits || !completions) {

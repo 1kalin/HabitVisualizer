@@ -104,8 +104,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // API routes for habit completion tracking
   
-  // Get all completions
-  app.get("/api/habits/completions", async (req, res) => {
+  // Get all completions - moved before the /api/habits/:id route to prevent route conflicts
+  app.get("/api/completions", async (req, res) => {
     try {
       const completions = await storage.getAllCompletions();
       res.json(completions);
